@@ -1,0 +1,212 @@
+from snakemake.utils import min_version
+from pathlib import Path
+import os
+import sys
+min_version("7.0")
+
+# JP
+workdir: config["outdir"]
+
+SCRIPTS_PATH = str(Path(workflow.basedir) / "scripts" )
+os.environ["PATH"] += os.pathsep + SCRIPTS_PATH
+
+# Wildcards
+SAMPLES, = glob_wildcards(Path(config["runs_dir"], "{sample,[^/]+}.fastq.gz")) # ,[^/]+} -> avoids to match all subdirectories. 
+
+print(SAMPLES)
+
+rule all:
+    input:
+        fastq = expand(Path(config["runs_dir"], "{sample}.fastq.gz"), sample = SAMPLES),
+        mapping = expand(Path(config["mapping_dir"], "{sample}.bam"), sample = SAMPLES),
+        coverage = expand(Path(config["mapping_dir"], "{sample}.bam.cov.txt"), sample = SAMPLES),
+        adapters = expand(Path(config["polyA_dir"], "{sample}.adapter_results.txt"), sample = SAMPLES),
+        polya = expand(Path(config["polyA_dir"], "{sample}.polya_tail.results.txt"), sample = SAMPLES),
+        read_info = expand(Path(config["polyA_dir"], "{sample}.read_info.result.txt"), sample = SAMPLES),
+        merge_read_info = expand(Path(config["polyA_dir"], "{sample}.read_info.result.merged.txt"), sample = SAMPLES),
+        extract_tails = expand(Path(config["polyA_dir"], "{sample}.read_info.result.merged.parts.csv"), sample = SAMPLES),
+        prepare_data_for_splice_kinetics = expand(Path(config["polyA_dir"], "{sample}.read_intron_pos.splicing.txt"), sample = SAMPLES),
+
+        splicing_kinetics = expand(Path(config["polyA_dir"], "{sample}.splicing_kinetics.txt"), sample = SAMPLES),
+        plot = expand(Path(config["polyA_dir"], "{sample}.splicing_kinetics.pdf"), sample = SAMPLES),
+
+        spliced = expand(Path(config["polyA_dir"], "{sample}.mRNA.incompletely_spliced_ratio.txt"), sample = SAMPLES),
+        intron = expand(Path(config["polyA_dir"], "{sample}.intron.unspliced_ratio.txt"), sample = SAMPLES)
+
+
+rule minimap2_genome: 
+    input: 
+        fastq = Path(config["runs_dir"], "{sample}.fastq.gz"),
+        ref = config["reference_genome"]
+    output:
+        bam = Path(config["mapping_dir"],"{sample}.bam")
+    params:
+        add_opts = config["minimap2_add_opts"]
+    threads: 8
+    shell:
+        """ 
+        module load minimap2 samtools
+        minimap2 -ax splice {params.add_opts} -t {threads} {input.ref} {input.fastq} | samtools sort -@ {threads} -o {output.bam} -
+        samtools index {output.bam}
+        """
+
+rule samtools_coverage:
+    input:
+        bam = rules.minimap2_genome.output.bam
+    output:
+        coverage = Path(config["mapping_dir"], "{sample}.bam.cov.txt")
+    threads: 2
+    shell:
+        """
+        module load samtools
+        samtools coverage {input.bam} > {output.coverage}
+        """
+
+rule adapterFinder:
+    input:
+        fastq = Path(config["runs_dir"], "{sample}.fastq.gz"),
+        #fasta = rules.fastq2fasta.output.fasta,
+        bam = rules.minimap2_genome.output.bam
+        #bam = rules.remove_rRNA.output.bam
+    output:
+        adapters = Path(config["polyA_dir"],"{sample}.adapter_results.txt")
+    params: 
+        mode = "--mode 1" # 0 = FLEPSeq1, 1 = FLEPSeq2. (Default is 0 in adapterFinder.py)
+    message: "Find 3’ adapter in reads"
+    conda: 
+        "envs/flepseq.yaml"
+    threads: 
+        12
+    shell: 
+        """
+        module load ncbi-blast+
+        adapterFinder.py --threads {threads} --inbam {input.bam} --inseq {input.fastq} --out {output.adapters}
+        """
+
+rule polya_caller:
+    input:
+        adapters = rules.adapterFinder.output.adapters,
+        #summary = RUNS_DIR / "{sample}.sequencing_summary.txt",
+        summary = Path(config["runs_dir"], "sequencing_summary.txt"),
+        fast5_dir = Path(config["basecalled_dir"]),
+    output:
+        polya = Path(config["polyA_dir"],"{sample}.polya_tail.results.txt")
+    conda: 
+        "envs/flepseq.yaml"
+    threads: 
+        12
+    shell: 
+        """
+        PolyACaller.py --threads {threads} --inadapter {input.adapters} --summary {input.summary} --fast5dir {input.fast5_dir} --out {output.polya}
+        """
+
+rule extract_read_info:
+    input:
+        bam = Path(config["mapping_dir"], "{sample}.bam"),
+        bed = Path(config["introns_exons"])
+    output:
+        read_info = Path(config["polyA_dir"], "{sample}.read_info.result.txt")
+    conda: 
+        "envs/flepseq.yaml"
+    threads: 
+        4
+    shell: 
+        """
+        extract_read_info.py --inbam {input.bam} --inbed {input.bed} --out {output.read_info}
+        """
+
+rule merge_read_info:
+    input:
+        read_info = rules.extract_read_info.output.read_info,
+        adapters = rules.adapterFinder.output.adapters,
+        polya = rules.polya_caller.output.polya
+    output:
+        read_info = Path(config["polyA_dir"], "{sample}.read_info.result.merged.txt")
+    conda: 
+        "envs/flepseq.yaml"
+    threads: 
+        4
+    shell:
+        """
+        merge_read_info.R --type Nanopore --inreadinfo {input.read_info} --inadapter {input.adapters} --inpolya {input.polya} --out {output.read_info}
+        """
+
+rule extract_tails:
+    input:
+        merged_read_info = rules.merge_read_info.output.read_info,
+        fastq = Path(config["runs_dir"], "{sample}.fastq.gz")
+        #fasta = rules.fastq2fasta.output.fasta
+    output:
+        Path(config["polyA_dir"], "{sample}.read_info.result.merged.parts.csv")
+    conda:
+        "envs/flepseq.yaml"
+    threads: 
+        1
+    resources:
+        mem = "16G"
+    shell:
+        """
+        extract_tails.py --inadapter {input.merged_read_info} --inseq {input.fastq} --out {output}
+        """
+
+
+rule prepare_data_for_splice_kinetics:
+    input:
+        read_info = rules.extract_read_info.output.read_info,
+        bed = Path(config["introns_exons"])
+    output:
+        read_intron = Path(config["polyA_dir"], "{sample}.read_intron_pos.splicing.txt")
+    message:  "Analyze splicing kinetics - Step 1: Prepare data"
+    conda: 
+        "envs/flepseq.yaml"
+    threads: 
+        4
+    shell:
+        """       
+        prepare_data_for_splice_kinetics.py --inreadinfo {input.read_info} --inbed {input.bed} --out {output.read_intron}
+        """
+
+rule plot_intron_splicing_kinetics:
+    input:
+        read_intron = rules.prepare_data_for_splice_kinetics.output.read_intron,
+        read_info = rules.merge_read_info.output.read_info,
+        select_introns = Path(config["select_introns"])
+    output:
+        splicing_kinetics = Path(config["polyA_dir"], "{sample}.splicing_kinetics.txt"),
+        plot = Path(config["polyA_dir"], "{sample}.splicing_kinetics.pdf")
+    message:  "Analyze splicing kinetics - Step 2: Get results and plots"
+    conda: 
+        "envs/flepseq.yaml"
+    threads: 
+        4
+    shell:
+        """       
+        plot_intron_splicing_kinetics.R \
+            --inrelpos {input.read_intron} \
+            --inreadinfo {input.read_info} \
+            --inintron {input.select_introns} \
+            --out {output.splicing_kinetics} \
+            --pdf {output.plot} 
+        """
+
+rule calculate_intron_retention_ratio:
+    input:
+        read_intron = rules.prepare_data_for_splice_kinetics.output.read_intron,
+        read_info = rules.merge_read_info.output.read_info,
+        select_introns = Path(config["select_introns"])
+    output:
+        mrna_incompletely_spliced = Path(config["polyA_dir"], "{sample}.mRNA.incompletely_spliced_ratio.txt"),
+        unspliced_intron = Path(config["polyA_dir"], "{sample}.intron.unspliced_ratio.txt")
+    message:  "Analyze splicing kinetics - Step 2: Get results and plots"
+    conda: 
+        "envs/flepseq.yaml"
+    threads: 
+        4
+    shell:
+        """    
+        cal_polya_transcript_ir.R \
+            --inrelpos {input.read_intron}  \
+            --inreadinfo {input.read_info} \
+            --outrna {output.mrna_incompletely_spliced} \
+            --outintron {output.unspliced_intron}
+        """

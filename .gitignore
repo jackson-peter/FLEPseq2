@@ -1,0 +1,5 @@
+logs/
+slurm/
+.snakemake/
+workflow/.snakemake
+

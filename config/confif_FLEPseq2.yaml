@@ -1,0 +1,16 @@
+basecalled_dir: "/ssd_workspace/jpeter/ssData/Guppy_basecalling/20221104_1159_MN26523_AMX243_7eae0f4a/workspace"
+outdir: "/home/jpeter/DATA/FLEPseq/JP_TestRACE2"
+
+runs_dir: "1_Runs"
+mapping_dir: "2_Mapping"
+polyA_dir: "3_PolyA"
+
+introns_exons: "/home/jpeter/DATA/ReferenceGenomes/NanoRACE/NanoRACE_exon_intron_pos.bed"
+select_introns: "/home/jpeter/DATA/ReferenceGenomes/Athaliana/TAIR10/select_introns.txt"
+
+reference_genome: "/home/jpeter/DATA/ReferenceGenomes/NanoRACE/NanoRACE_04112022_mapping.fa" # Reference genome in fasta
+
+## MINIMAP MAPPING ADDITIONAL PARAMETERS
+minimap2_add_opts: "--secondary=no -G 5000"
+
+
