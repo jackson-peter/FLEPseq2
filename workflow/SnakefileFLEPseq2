@@ -24,7 +24,7 @@ rule all:
         polya = expand(Path(config["polyA_dir"], "{sample}.polya_tail.results.txt"), sample = SAMPLES),
         read_info = expand(Path(config["polyA_dir"], "{sample}.read_info.result.txt"), sample = SAMPLES),
         merge_read_info = expand(Path(config["polyA_dir"], "{sample}.read_info.result.merged.txt"), sample = SAMPLES),
-        extract_tails = expand(Path(config["polyA_dir"], "{sample}.read_info.result.merged.parts.csv"), sample = SAMPLES),
+        extract_tails = expand(Path(config["tail_dir"], "{sample}.read_info.result.merged.parts.csv"), sample = SAMPLES),
         prepare_data_for_splice_kinetics = expand(Path(config["polyA_dir"], "{sample}.read_intron_pos.splicing.txt"), sample = SAMPLES),
 
         splicing_kinetics = expand(Path(config["polyA_dir"], "{sample}.splicing_kinetics.txt"), sample = SAMPLES),
@@ -137,7 +137,7 @@ rule extract_tails:
         fastq = Path(config["runs_dir"], "{sample}.fastq.gz")
         #fasta = rules.fastq2fasta.output.fasta
     output:
-        Path(config["polyA_dir"], "{sample}.read_info.result.merged.parts.csv")
+        Path(config["tail_dir"], "{sample}.read_info.result.merged.parts.csv")
     conda:
         "envs/flepseq.yaml"
     threads: 

@@ -561,6 +561,7 @@ def read_mRNA_exon_num_and_mRNA_pos(fileexon_bed):
     """
     mRNA2exons = collections.defaultdict(list) 
     for l in open(fileexon_bed):
+        print(fileexon_bed)
         d = l.rstrip("\n").split("\t")
         chr_name, start, end, exon_or_intron_name, na, strand = d
         start, end = int(start) + 1, int(end)

@@ -1,0 +1,26 @@
+name: flepseq
+channels:
+    - conda-forge
+    - bioconda
+    - defaults
+dependencies:
+    - pip
+    - click
+    - joblib
+    - ont-fast5-api
+    - pandas
+    - numpy
+    - swifter
+    - biopython
+    - bzip2
+    - pysam
+    - python>=3.9
+    - seqkit
+    - regex
+    - pyfastx
+    - tqdm
+    - r-base=4.1
+    - r-tidyverse
+    - r-optparse
+    - r-data.table
+    - edlib
