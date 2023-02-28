@@ -25,6 +25,7 @@ rule all:
         read_info = expand(Path(config["polyA_dir"], "{sample}.read_info.result.txt"), sample = SAMPLES),
         merge_read_info = expand(Path(config["polyA_dir"], "{sample}.read_info.result.merged.txt"), sample = SAMPLES),
         extract_tails = expand(Path(config["tail_dir"], "{sample}.read_info.result.merged.parts.csv"), sample = SAMPLES),
+        extract_tails_log = expand(Path(config["tail_dir"], "{sample}.read_info.result.merged.parts.csv.log"), sample = SAMPLES),
         prepare_data_for_splice_kinetics = expand(Path(config["polyA_dir"], "{sample}.read_intron_pos.splicing.txt"), sample = SAMPLES),
 
         splicing_kinetics = expand(Path(config["polyA_dir"], "{sample}.splicing_kinetics.txt"), sample = SAMPLES),
@@ -137,7 +138,8 @@ rule extract_tails:
         fastq = Path(config["runs_dir"], "{sample}.fastq.gz")
         #fasta = rules.fastq2fasta.output.fasta
     output:
-        Path(config["tail_dir"], "{sample}.read_info.result.merged.parts.csv")
+        result = Path(config["tail_dir"], "{sample}.read_info.result.merged.parts.csv"),
+        log = Path(config["tail_dir"], "{sample}.read_info.result.merged.parts.csv.log")
     conda:
         "envs/flepseq.yaml"
     threads: 
@@ -146,7 +148,7 @@ rule extract_tails:
         mem = "16G"
     shell:
         """
-        extract_tails.py --inadapter {input.merged_read_info} --inseq {input.fastq} --out {output}
+        extract_tails.py --inadapter {input.merged_read_info} --inseq {input.fastq} --out {output.result}
         """
 
 

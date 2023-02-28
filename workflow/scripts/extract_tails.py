@@ -15,6 +15,7 @@ from colorama import Fore, Style, init
 from collections import Counter
 init(autoreset=True)
 
+# FLEPSEQ2
 
 equalities=[("M", "A"), ("M", "C"),("R", "A"), ("R", "A"), ("W", "A"), ("W", "A"), ("S", "C"), ("S", "C"), ("Y", "C"), ("Y", "C"), 
 ("K", "G"), ("K", "G"), ("V", "A"), ("V", "C"), ("V", "G"), ("H", "A"), ("H", "C"), ("H", "T"), ("D", "A"), ("D", "G"), ("D", "T"),
@@ -40,8 +41,7 @@ def main(inadapter, inseq, out, constant_seq="CTGAC", umi_seq="NNNNNNNNNN", adap
     'primer_type': str}
     
     df = pd.read_csv(inadapter, delimiter = "\t", usecols=fields,dtype=dtypes)
-    print("ok")
-    
+    nb_reads_input=len(df.index)     
     
     df['readname'] = df['read_core_id'].str.split(",",n=1).str[0]
     #fq = SeqIO.to_dict(SeqIO.parse(gzip.open(inseq, "rt"),'fastq'))
@@ -53,28 +53,46 @@ def main(inadapter, inseq, out, constant_seq="CTGAC", umi_seq="NNNNNNNNNN", adap
             fq[record.id] = record.seq
 
     tqdm.pandas()
-
     df['read_seqs']=df.swifter.apply(lambda x: get_seq(fq, x.readname, x.primer_type in REV ), axis=1)
-    print("111111___ TEST ___111111")
-    print(df.head())
-    print(df.columns.tolist())
+    df['sense']= np.where(df["primer_type"].isin(FWD), "FWD", "REV")
 
-    df[['polytail','additional_tail','adapter', 'dist_adapter']] = df.swifter.apply(get_three_primes_parts_row, inseq=inseq, adapt_seq=adapt_seq, axis=1 )
-    df = pd.concat([df, df.apply(lambda col: get_composition(col["polytail"], "A-tail"), axis=1, result_type="expand")], axis = 1)
-    df = pd.concat([df, df.apply(lambda col: get_composition(col["additional_tail"], "add-tail"), axis=1, result_type="expand")], axis = 1)
+
+    df[['polytail','additional_tail','adapter', 'dist_adapter', 'comment']] = df.swifter.apply(get_three_primes_parts_row, adapt_seq=adapt_seq, axis=1 )
+    df = pd.concat([df, df.apply(lambda col: get_composition(col["polytail"], "A_tail"), axis=1, result_type="expand")], axis = 1)
+    df = pd.concat([df, df.apply(lambda col: get_composition(col["additional_tail"], "add_tail"), axis=1, result_type="expand")], axis = 1)
     df.drop('read_seqs', axis=1, inplace=True)
     df = df.replace(r'^\s*$', np.nan, regex=True)
     df.to_csv(out, encoding='utf-8', index=False, sep='\t', na_rep="NA")
 
+    nb_reads_output=len(df.index)
+    nb_unid_polyA=df['polytail'].isna().sum()
+    nb_unid_add=df['additional_tail'].isna().sum()
+    nb_unid_adapter=df['adapter'].isna().sum()
 
-def get_three_primes_parts_row(row, inseq, adapt_seq, debug=False):
-       
+    nb_reads_fwd=df.sense.value_counts()['FWD']
+    nb_reads_rev=df.sense.value_counts()['REV']
+
+    #Making log
+    with open(out+'.log', 'w') as outlog:
+        print(f"{Fore.BLUE}{nb_reads_input} total reads in adapter file", file=outlog)
+        print(f"{Fore.BLUE}{nb_reads_output} total reads in output file", file=outlog)
+        print(f"{Fore.BLUE}{nb_reads_fwd} forward reads", file=outlog)
+        print(f"{Fore.GREEN}{nb_reads_rev} reverse reads", file=outlog)
+        
+        print(f"{Fore.RED}{nb_unid_polyA} unidentified polyA", file=outlog)
+        print(f"{Fore.RED}{nb_unid_add} unidentified add_tail", file=outlog)
+        print(f"{Fore.RED}{nb_unid_adapter} unidentified adapter", file=outlog)
+
+
+
+def get_three_primes_parts_row(row, adapt_seq, debug=False):
+
     read_seq=row['read_seqs']
     primer_type=row['primer_type']
 
     if row['init_polya_start_base'] == row['init_polya_end_base']:
         
-        return pd.Series([np.nan, np.nan, np.nan, np.nan])
+        return pd.Series([np.nan, np.nan, np.nan, np.nan, 'polyA_start=polyA_end'])
 
     polytail=np.nan
     additional_tail=np.nan
@@ -83,6 +101,8 @@ def get_three_primes_parts_row(row, inseq, adapt_seq, debug=False):
         gene = read_seq[:row['init_polya_start_base']-1]
         polytail = read_seq[row['init_polya_start_base']-1:row['init_polya_end_base']]
         three_p_seq=read_seq[row['init_polya_end_base']:]
+        if len(three_p_seq)>200:
+            three_p_seq=three_p_seq[:200]
         #align = get_umi_alignment(three_p_seq, three_p_motive)
         if three_p_seq.startswith(adapt_seq):
 
@@ -99,7 +119,9 @@ def get_three_primes_parts_row(row, inseq, adapt_seq, debug=False):
 
         gene = read_seq[:len(read_seq) -row['init_polya_end_base']]
         polytail = read_seq[len(read_seq) -row['init_polya_end_base']: len(read_seq) -row['init_polya_start_base']+1]
-        three_p_seq=read_seq[len(read_seq) - row['init_polya_start_base']+1:]            
+        three_p_seq=read_seq[len(read_seq) - row['init_polya_start_base']+1:]   
+        if len(three_p_seq)>200:
+            three_p_seq=three_p_seq[:200]         
         #align = get_umi_alignment(three_p_seq, three_p_motive)
         if three_p_seq.startswith(adapt_seq):
 
@@ -148,11 +170,9 @@ def get_three_primes_parts_row(row, inseq, adapt_seq, debug=False):
         print(additional_tail)
         print("adapter")
         print(adapter)
-        return pd.Series(["assert_error", "assert_error", "assert_error", "assert_error"])
+        sys.exit("Assertion error for reconstructed sequence")
 
-
-
-    return pd.Series([polytail, additional_tail, adapter, dist_adapter])
+    return pd.Series([polytail, additional_tail, adapter, dist_adapter, "everything ok"])
    
 def parse_fastq(fastq):
     with open(fastq, 'r') as f:
@@ -211,23 +231,24 @@ def get_composition(seq: str, col_prefix) -> pd.Series:
     Get the composition and the percentage of ATGC in a DNA sequence. 
     Ignore all nucleotides other than ATGC (like N).
     """
-    nucl_count = {col_prefix+'_A': 0, col_prefix+'_T': 0, col_prefix+'_G': 0, col_prefix+'_C': 0}
-    nucl_perc = {col_prefix+'_pct_A': 0, col_prefix+'_pct_T': 0, col_prefix+'_pct_G': 0, col_prefix+'_pct_C': 0}
-
+    nucl_count = {col_prefix+'_A': np.nan, col_prefix+'_T': np.nan, col_prefix+'_G': np.nan, col_prefix+'_C': np.nan}
+    nucl_perc = {col_prefix+'_pct_A': np.nan, col_prefix+'_pct_T': np.nan, col_prefix+'_pct_G': np.nan, col_prefix+'_pct_C': np.nan}
 
     if seq and not pd.isna(seq):
+
         seq = regex.sub('[^ATCG]', '', seq)
         seq_len=len(seq)
+    
         
         if seq_len>0:
             res = Counter(seq)
             #print(res['A'])
             nucl_count = {col_prefix+'_A': res['A'], col_prefix+'_T': res['T'], col_prefix+'_G': res['G'], col_prefix+'_C': res['C']}
-            nucl_perc = {col_prefix+'_pct_A': res['A']/seq_len, col_prefix+'_pct_T': res['T']/seq_len, col_prefix+'_pct_G': res['G']/seq_len, col_prefix+'_pct_C': res['C']/seq_len}
-
+            nucl_perc = {col_prefix+'_pct_A': res['A']*100/seq_len, col_prefix+'_pct_T': res['T']*100/seq_len, col_prefix+'_pct_G': res['G']*100/seq_len, col_prefix+'_pct_C': res['C']*100/seq_len}
+    
     return_val = pd.concat([pd.Series(nucl_count), pd.Series(nucl_perc)])
+    
     return return_val
-
 
 
 if __name__ == '__main__':
