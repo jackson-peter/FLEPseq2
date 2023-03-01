@@ -33,12 +33,16 @@ REV=("R-F", "R-R", "R-N", "R-UF", "R-UUR", "R-UR", "N-F", "N-UF", "UF-F", "UR-F"
 @click.option('-d', '--debug', is_flag=True, help="for developping purposes, prints additional information")
 
 def main(inadapter, inseq, out, constant_seq="CTGAC", umi_seq="NNNNNNNNNN", adapt_seq="CTGTAGGCACCATCAAT", verbose=False, debug=False):
-    fields = ['read_core_id','mRNA','init_polya_start_base', 'init_polya_end_base','primer_type']
+    fields = ['read_core_id','mRNA','polya_start_base', 'polya_end_base', 'init_polya_start_base', 'init_polya_end_base','primer_type', 'polya_length', 'init_polya_length']
     dtypes= {'read_core_id': str,
     'mRNA': str,
+    'polya_start_base': int,
+    'polya_end_base':int,
     'init_polya_start_base': int,
     'init_polya_end_base': int,
-    'primer_type': str}
+    'primer_type': str,
+    'polya_length': float,
+    'init_polya_length': float}
     
     df = pd.read_csv(inadapter, delimiter = "\t", usecols=fields,dtype=dtypes)
     nb_reads_input=len(df.index)     
