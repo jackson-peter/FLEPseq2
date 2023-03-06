@@ -32,7 +32,13 @@ rule all:
         plot = expand(Path(config["polyA_dir"], "{sample}.splicing_kinetics.pdf"), sample = SAMPLES),
 
         spliced = expand(Path(config["polyA_dir"], "{sample}.mRNA.incompletely_spliced_ratio.txt"), sample = SAMPLES),
-        intron = expand(Path(config["polyA_dir"], "{sample}.intron.unspliced_ratio.txt"), sample = SAMPLES)
+        intron = expand(Path(config["polyA_dir"], "{sample}.intron.unspliced_ratio.txt"), sample = SAMPLES),
+
+        Utail_barplot = Path(config["tail_dir"], "Utail_barplot.pdf"),
+        pct_uridylation = Path(config["tail_dir"], "Percent_of_uridylation.pdf"),
+        polyA_distr1 = Path(config["tail_dir"], "PolyA_distrib_filtered_nchar.pdf"),
+        polyA_distr3 = Path(config["tail_dir"], "PolyA_distrib_polyAlength.pdf"),
+        polyA_distr4 = Path(config["tail_dir"], "PolyA_distrib_xlim_init_polyalength.pdf")
 
 
 rule minimap2_genome: 
@@ -199,6 +205,7 @@ rule calculate_intron_retention_ratio:
     output:
         mrna_incompletely_spliced = Path(config["polyA_dir"], "{sample}.mRNA.incompletely_spliced_ratio.txt"),
         unspliced_intron = Path(config["polyA_dir"], "{sample}.intron.unspliced_ratio.txt")
+
     message:  "Analyze splicing kinetics - Step 2: Get results and plots"
     conda: 
         "envs/flepseq.yaml"
@@ -212,3 +219,32 @@ rule calculate_intron_retention_ratio:
             --outrna {output.mrna_incompletely_spliced} \
             --outintron {output.unspliced_intron}
         """
+
+
+rule plot_three_p_tails:
+    input:
+        #tail_dir=Path(config["tail_dir"]),
+        barcode_corr = Path(config["barcode_corr"])
+    output:
+        Utail_barplot = Path(config["tail_dir"], "AddTail_length_barplot.pdf"),
+        pct_uridylation = Path(config["tail_dir"], "AddTail_Percent_of_uridylation.pdf"),
+        addTail_basecomp = Path(config["tail_dir"], "Addtail_BaseComposition.pdf"),
+        polyA_distr1 = Path(config["tail_dir"], "PolyA_length_nchar.pdf"),
+        polyA_distr3 = Path(config["tail_dir"], "PolyA_length_polyAlength.pdf"),
+        polyA_distr4 = Path(config["tail_dir"], "PolyA_length_initPolyALength.pdf")
+    params: 
+        suffix_add=".read_info.result.merged.parts.csv",
+        tail_dir=Path(config["outdir"], config["tail_dir"])
+    message:  "Generating plots of 3' ends"
+    conda: 
+        "envs/flepseq.yaml"
+    threads: 
+        4
+    shell:
+        """    
+        plot_tail.R {params.suffix_add}  {params.tail_dir} {input.barcode_corr}
+        """
+
+
+
+
