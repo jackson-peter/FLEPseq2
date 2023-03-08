@@ -104,7 +104,6 @@ p <- ggplot(df_uri%>%filter(U_state=="U-tail")) + geom_bar(aes(tail_length, fill
   theme_bw()+
   ggtitle("Read counts vs Utail length")
 
-p
 
 ggsave(filename =file.path(dir_add_tail,"AddTail_length_barplot.pdf"), p, width = 5, height = 6, dpi = 300)
 
@@ -124,8 +123,6 @@ p <- ggplot(df_uri_add_tail_long_summ, aes(x=sample, y=mean_add_tail_pct, fill=s
   theme_bw() +
   ggtitle("additional tail base composition")
 
-p
-
 ggsave(filename =file.path(dir_add_tail,"Addtail_BaseComposition.pdf"), p, width = 5, height = 6, dpi = 300)
 
 
@@ -135,7 +132,6 @@ p <- ggplot(df_uri_add_tail_long, aes(x=sample, y=tail_length, fill=sample)) +
   theme_bw() +
   coord_cartesian(ylim=c(0, 25))
 
-p
 ggsave(filename =file.path(dir_add_tail,"Utail_length_bp.pdf"), p, width = 5, height = 6, dpi = 300)
 
 
@@ -179,8 +175,6 @@ ggplot(df_uri %>% filter(polya_length_nchar<200,
   ggtitle("Distribution of Poly-A tail sizes", subtitle = "polyA size=init_polya_length from FLEPSeq2")
 
 ggsave(filename =file.path(dir_add_tail,"PolyA_length_initPolyALength.pdf"), width = 5, height = 6, dpi = 300)
-
-
 ######## \ PolyA
 
 

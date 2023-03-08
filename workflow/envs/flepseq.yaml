@@ -10,6 +10,7 @@ dependencies:
     - ont-fast5-api
     - pandas
     - numpy
+    - json
     - swifter
     - biopython
     - bzip2

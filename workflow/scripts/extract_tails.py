@@ -8,6 +8,7 @@ import sys
 from Bio import SeqIO
 import gzip
 import edlib
+import json
 from itertools import zip_longest
 import regex
 from tqdm import tqdm
@@ -44,8 +45,9 @@ def main(inadapter, inseq, out, constant_seq="CTGAC", umi_seq="NNNNNNNNNN", adap
     'polya_length': float,
     'init_polya_length': float}
     
+    log_dict={}
     df = pd.read_csv(inadapter, delimiter = "\t", usecols=fields,dtype=dtypes)
-    nb_reads_input=len(df.index)     
+    log_dict["nb_reads_input"]=len(df.index)     
     
     df['readname'] = df['read_core_id'].str.split(",",n=1).str[0]
     #fq = SeqIO.to_dict(SeqIO.parse(gzip.open(inseq, "rt"),'fastq'))
@@ -67,27 +69,17 @@ def main(inadapter, inseq, out, constant_seq="CTGAC", umi_seq="NNNNNNNNNN", adap
     df.drop('read_seqs', axis=1, inplace=True)
     df = df.replace(r'^\s*$', np.nan, regex=True)
     df.to_csv(out, encoding='utf-8', index=False, sep='\t', na_rep="NA")
-
-    nb_reads_output=len(df.index)
-    nb_unid_polyA=df['polytail'].isna().sum()
-    nb_unid_add=df['additional_tail'].isna().sum()
-    nb_unid_adapter=df['adapter'].isna().sum()
-
-    nb_reads_fwd=df.sense.value_counts()['FWD']
-    nb_reads_rev=df.sense.value_counts()['REV']
-
+    
     #Making log
-    with open(out+'.log', 'w') as outlog:
-        print(f"{Fore.BLUE}{nb_reads_input} total reads in adapter file", file=outlog)
-        print(f"{Fore.BLUE}{nb_reads_output} total reads in output file", file=outlog)
-        print(f"{Fore.BLUE}{nb_reads_fwd} forward reads", file=outlog)
-        print(f"{Fore.GREEN}{nb_reads_rev} reverse reads", file=outlog)
-        
-        print(f"{Fore.RED}{nb_unid_polyA} unidentified polyA", file=outlog)
-        print(f"{Fore.RED}{nb_unid_add} unidentified add_tail", file=outlog)
-        print(f"{Fore.RED}{nb_unid_adapter} unidentified adapter", file=outlog)
+    log_dict["nb_reads_output"]=len(df.index)
+    log_dict["nb_unid_polyA"]=df['polytail'].isna().sum()
+    log_dict["nb_unid_add"]=df['additional_tail'].isna().sum()
+    log_dict["nb_unid_adapter"]=df['adapter'].isna().sum()
+    log_dict["nb_reads_fwd"]=df.sense.value_counts()['FWD']
+    log_dict["nb_reads_rev"]=df.sense.value_counts()['REV']
 
-
+    with open(out+'.log.json', 'w') as outlog:
+        json.dump(log_dict, outlog)
 
 def get_three_primes_parts_row(row, adapt_seq, debug=False):
 
