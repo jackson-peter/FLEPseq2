@@ -34,11 +34,12 @@ rule all:
         spliced = expand(Path(config["polyA_dir"], "{sample}.mRNA.incompletely_spliced_ratio.txt"), sample = SAMPLES),
         intron = expand(Path(config["polyA_dir"], "{sample}.intron.unspliced_ratio.txt"), sample = SAMPLES),
 
-        Utail_barplot = Path(config["tail_dir"], "Utail_barplot.pdf"),
-        pct_uridylation = Path(config["tail_dir"], "Percent_of_uridylation.pdf"),
-        polyA_distr1 = Path(config["tail_dir"], "PolyA_distrib_filtered_nchar.pdf"),
-        polyA_distr3 = Path(config["tail_dir"], "PolyA_distrib_polyAlength.pdf"),
-        polyA_distr4 = Path(config["tail_dir"], "PolyA_distrib_xlim_init_polyalength.pdf")
+        Utail_barplot = Path(config["tail_dir"], "AddTail_length_barplot.pdf"),
+        pct_uridylation = Path(config["tail_dir"], "AddTail_Percent_of_uridylation.pdf"),
+        addTail_basecomp = Path(config["tail_dir"], "Addtail_BaseComposition.pdf"),
+        polyA_distr1 = Path(config["tail_dir"], "PolyA_length_nchar.pdf"),
+        polyA_distr3 = Path(config["tail_dir"], "PolyA_length_polyAlength.pdf"),
+        polyA_distr4 = Path(config["tail_dir"], "PolyA_length_initPolyALength.pdf")
 
 
 rule minimap2_genome: 
