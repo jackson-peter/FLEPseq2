@@ -8,7 +8,6 @@ import sys
 from Bio import SeqIO
 import gzip
 import edlib
-import json
 from itertools import zip_longest
 import regex
 from tqdm import tqdm
@@ -17,17 +16,6 @@ from collections import Counter
 init(autoreset=True)
 
 # FLEPSEQ2
-
-
-class NpEncoder(json.JSONEncoder):
-    def default(self, obj):
-        if isinstance(obj, np.integer):
-            return int(obj)
-        if isinstance(obj, np.floating):
-            return float(obj)
-        if isinstance(obj, np.ndarray):
-            return obj.tolist()
-        return super(NpEncoder, self).default(obj)
 
 equalities=[("M", "A"), ("M", "C"),("R", "A"), ("R", "A"), ("W", "A"), ("W", "A"), ("S", "C"), ("S", "C"), ("Y", "C"), ("Y", "C"), 
 ("K", "G"), ("K", "G"), ("V", "A"), ("V", "C"), ("V", "G"), ("H", "A"), ("H", "C"), ("H", "T"), ("D", "A"), ("D", "G"), ("D", "T"),
@@ -89,8 +77,8 @@ def main(inadapter, inseq, out, constant_seq="CTGAC", umi_seq="NNNNNNNNNN", adap
     log_dict["nb_reads_fwd"]=df.sense.value_counts()['FWD']
     log_dict["nb_reads_rev"]=df.sense.value_counts()['REV']
 
-    with open(out+'.log.json', 'w') as outlog:
-        json.dump(log_dict, outlog, cls=NpEncoder)
+    with open(out+'.log', 'w') as outlog:
+        print(log_dict, file=outlog)
 
 def get_three_primes_parts_row(row, adapt_seq, debug=False):
 
