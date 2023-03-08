@@ -146,7 +146,8 @@ rule extract_tails:
         #fasta = rules.fastq2fasta.output.fasta
     output:
         result = Path(config["tail_dir"], "{sample}.read_info.result.merged.parts.csv"),
-        log = Path(config["tail_dir"], "{sample}.read_info.result.merged.parts.csv.log")
+        log = Path(config["tail_dir"], "{sample}.read_info.result.merged.parts.csv.log"),
+        touch(Path(config["tail_dir"],"done.txt"))
     conda:
         "envs/flepseq.yaml"
     threads: 
@@ -225,6 +226,7 @@ rule calculate_intron_retention_ratio:
 rule plot_three_p_tails:
     input:
         #tail_dir=Path(config["tail_dir"]),
+        Path(config["tail_dir"],"done.txt"),
         barcode_corr = Path(config["barcode_corr"])
     output:
         Utail_barplot = Path(config["tail_dir"], "AddTail_length_barplot.pdf"),
