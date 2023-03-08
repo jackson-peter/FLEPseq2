@@ -10,12 +10,12 @@ library(gridExtra)
 ######## ARGUMENTS
 args = commandArgs(trailingOnly=TRUE)
 
-#suffix_add_tail=args[1]
-suffix_add_tail=".read_info.result.merged.parts.csv"
-#dir_add_tail=args[2]
-dir_add_tail="/home/jpeter/DATA/FLEPseq/RUN08_Fleurs_v3/4_Tail"
-#sample_corresp=args[3]
-sample_corresp="/home/jpeter/DATA/FLEPseq/RUN08_Fleurs_v3/barcode_correspondances.tsv"
+suffix_add_tail=args[1]
+#suffix_add_tail=".read_info.result.merged.parts.csv"
+dir_add_tail=args[2]
+#dir_add_tail="/home/jpeter/DATA/FLEPseq/RUN08_Fleurs_v3/4_Tail"
+sample_corresp=args[3]
+#sample_corresp="/home/jpeter/DATA/FLEPseq/RUN08_Fleurs_v3/barcode_correspondances.tsv"
 
 ######## \ ARGUMENTS
 
