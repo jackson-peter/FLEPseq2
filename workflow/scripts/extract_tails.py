@@ -151,20 +151,6 @@ def get_three_primes_parts_row(row, adapt_seq, debug=False):
     try:
         assert(reconstructed_seq in read_seq), "A Message"
     except AssertionError:
-        print(f"#@#@#@#@#@#@#@#@ {row['readname']}, {row['primer_type']} #@#@#@#@#@#@#@#@#@#@#@#@#@")
-        #print(readname, primer_type)
-        print(row['mRNA'], row['init_polya_start_base'], row['init_polya_end_base'], row['primer_type'])
-        print(read_seq)
-        print("")
-
-        print("gene")
-        print(gene)
-        print("polytail")
-        print(polytail)
-        print("additional_tail")
-        print(additional_tail)
-        print("adapter")
-        print(adapter)
         sys.exit("Assertion error for reconstructed sequence")
 
     return pd.Series([polytail, additional_tail, adapter, dist_adapter, "everything ok"])

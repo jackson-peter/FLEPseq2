@@ -13,9 +13,9 @@ args = commandArgs(trailingOnly=TRUE)
 suffix_add_tail=args[1]
 #suffix_add_tail=".read_info.result.merged.parts.csv"
 dir_add_tail=args[2]
-#dir_add_tail="/home/jpeter/DATA/FLEPseq/RUN08_Fleurs_v3/4_Tail"
+#dir_add_tail="/home/jpeter/DATA/FLEPseq/RUN09_Heike/4_Tail"
 sample_corresp=args[3]
-#sample_corresp="/home/jpeter/DATA/FLEPseq/RUN08_Fleurs_v3/barcode_correspondances.tsv"
+#sample_corresp="/home/jpeter/DATA/FLEPseq/RUN09_Heike/barcode_correspondance.tsv"
 
 ######## \ ARGUMENTS
 
@@ -29,7 +29,8 @@ give.n <- function(x){
 ######## DATA IMPORT
 
 samples_infos <- fread(sample_corresp, header = F, col.names = c("code", "sample")) %>%
-  mutate(add_tail_path=file.path(dir_add_tail,paste0(code,suffix_add_tail)))
+  mutate(add_tail_path=list.files(path=dir_add_tail, pattern = paste0(".*", code, ".*", suffix_add_tail, "$"), full.names = T))
+
 
 nlist_add_tail <- samples_infos$add_tail_path
 

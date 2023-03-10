@@ -1,5 +1,5 @@
-basecalled_dir: "/ssd_workspace/jpeter/ssData/Guppy_basecalling/RUN08/Col0_urt1_heso1_uh/workspace"
-outdir: "/home/jpeter/DATA/FLEPseq/RUN08_Fleurs_v4"
+basecalled_dir: "/ssd_workspace/qsimonnot/Basecalling_RUN09/workspace"
+outdir: "/home/jpeter/DATA/FLEPseq/RUN09_Heike"
 barcode_corr: "/home/jpeter/DATA/FLEPseq/RUN08_Fleurs_v4/barcode_correspondances.tsv"
 
 runs_dir: "1_Runs"
