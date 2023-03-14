@@ -28,14 +28,18 @@ give.n <- function(x){
 
 ######## DATA IMPORT
 
-samples_infos <- fread(sample_corresp, header = F, col.names = c("code", "sample")) %>%
-  mutate(add_tail_path=list.files(path=dir_add_tail, pattern = paste0(".*", code, ".*", suffix_add_tail, "$"), full.names = T))
+samples_infos <- fread(sample_corresp, header = F, col.names = c("code", "sample")) %>% 
+  mutate(add_tail_path=file.path(path=dir_add_tail,paste0(code, suffix_add_tail)))
 
 
 nlist_add_tail <- samples_infos$add_tail_path
 
 names(nlist_add_tail) <- samples_infos$code
-
+palette2_all <- grDevices::colors()
+palette2_no_gray <- palette2_all[grep("gr(a|e)y",             # Remove gray colors
+                                      grDevices::colors(),
+                                      invert = T)]
+my_colors <- sample(palette2_no_gray, nrow(samples_infos))
 REF_genotype <- as.character(samples_infos[1, "sample"])
 
 df_uri <- rbindlist(lapply(nlist_add_tail, fread), idcol = "code") %>%
@@ -67,10 +71,8 @@ global_pctU <- df_uri %>% group_by(sample, U_state, .drop=FALSE) %>%
 mRNA_pctU$sample <- factor(mRNA_pctU$sample, levels=as.vector(samples_infos$sample))
 global_pctU$sample <- factor(global_pctU$sample, levels=as.vector(samples_infos$sample))
 
-my_colors <- c("gray50", "darkblue", "wheat", "darkred")
-
 mRNA_Utails <- mRNA_pctU %>% filter(U_state=="U-tail")
-  
+
 global_Utails <- global_pctU%>% filter(U_state=="U-tail")
 
 p1 <- ggplot(mRNA_Utails, aes(x=sample, y=Percent, fill=sample)) + 

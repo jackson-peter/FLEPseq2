@@ -202,7 +202,7 @@ def get_seq(fq, readname, antisense) -> str:
 
     seq=fq[readname]
     if antisense:
-       return str(seq.reverse_complement())
+        return str(seq.reverse_complement())
     else:
         return str(seq)
 
