@@ -39,7 +39,12 @@ palette2_all <- grDevices::colors()
 palette2_no_gray <- palette2_all[grep("gr(a|e)y",             # Remove gray colors
                                       grDevices::colors(),
                                       invert = T)]
-my_colors <- sample(palette2_no_gray, nrow(samples_infos))
+if ( nrow(samples_infos)==4 ) {
+  my_colors <- c("gray50", "darkblue", "wheat", "darkred")
+} else {
+  my_colors <- sample(palette2_no_gray, nrow(samples_infos))
+}
+
 REF_genotype <- as.character(samples_infos[1, "sample"])
 
 df_uri <- rbindlist(lapply(nlist_add_tail, fread), idcol = "code") %>%
@@ -110,6 +115,17 @@ p <- ggplot(df_uri%>%filter(U_state=="U-tail")) + geom_bar(aes(tail_length, fill
 
 ggsave(filename =file.path(dir_add_tail,"AddTail_length_barplot.pdf"), p, width = 5, height = 6, dpi = 300)
 
+p <- ggplot(df_uri%>%filter(U_state=="U-tail",
+                            tail_length<30)) + geom_bar(aes(tail_length, fill=sample), color="black") +
+  facet_wrap(~sample, ncol=1, scales="free") +
+  #scale_x_continuous(limits=c(0,20), breaks=seq(0,20,by=2)) +
+  scale_fill_manual(values = my_colors) +
+  theme_bw()+
+  ggtitle("Read counts vs Utail length")
+
+
+ggsave(filename =file.path(dir_add_tail,"AddTail_length_barplot_zoom.pdf"), p, width = 5, height = 6, dpi = 300)
+
 df_uri_add_tail_long <- df_uri %>% filter(U_state=="U-tail") %>%
   pivot_longer(cols=c("add_tail_pct_A", "add_tail_pct_C", "add_tail_pct_G", "add_tail_pct_T"), names_to = "add_tail_nucl", values_to = "add_tail_pct")
 
@@ -178,6 +194,8 @@ ggplot(df_uri %>% filter(polya_length_nchar<200,
   ggtitle("Distribution of Poly-A tail sizes", subtitle = "polyA size=init_polya_length from FLEPSeq2")
 
 ggsave(filename =file.path(dir_add_tail,"PolyA_length_initPolyALength.pdf"), width = 5, height = 6, dpi = 300)
+
+
 ######## \ PolyA
 
 

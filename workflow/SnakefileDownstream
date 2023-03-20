@@ -22,6 +22,7 @@ rule plot_three_p_tails:
     output: "done.txt"
     params: 
         Utail_barplot = Path(config["tail_dir"], "AddTail_length_barplot.pdf"),
+        Utail_barplot_zoom=Path(config["tail_dir"], "AddTail_length_barplot_zoom.pdf"),
         pct_uridylation = Path(config["tail_dir"], "AddTail_Percent_of_uridylation.pdf"),
         addTail_basecomp = Path(config["tail_dir"], "Addtail_BaseComposition.pdf"),
         polyA_distr1 = Path(config["tail_dir"], "PolyA_length_nchar.pdf"),
