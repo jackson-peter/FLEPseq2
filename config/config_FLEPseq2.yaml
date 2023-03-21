@@ -1,6 +1,6 @@
-basecalled_dir: "/ssd_workspace/jpeter/ssData/Guppy_basecalling/RUN10_rep17_GS/Col0_urt1_heso1_uh/workspace/"
-outdir: "/home/jpeter/DATA/FLEPseq/RUN10_rep17_GS_v2/"
-barcode_corr: "/home/jpeter/DATA/FLEPseq/RUN10_rep17_GS_v2/barcode_correspondance.tsv"
+basecalled_dir: "/ssd_workspace/jpeter/ssData/Guppy_basecalling/RUN11_F/workspace/"
+outdir: "/home/jpeter/DATA/FLEPseq/RUN11_F/"
+barcode_corr: "/home/jpeter/DATA/FLEPseq/RUN11_F/barcode_correspondance.tsv"
 
 runs_dir: "1_Runs"
 mapping_dir: "2_Mapping"
@@ -14,5 +14,3 @@ reference_genome: "/home/jpeter/DATA/ReferenceGenomes/Athaliana/TAIR10/TAIR10_ch
 
 ## MINIMAP MAPPING ADDITIONAL PARAMETERS
 minimap2_add_opts: "--secondary=no -G 5000"
-
-

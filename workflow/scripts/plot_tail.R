@@ -51,7 +51,7 @@ df_uri <- rbindlist(lapply(nlist_add_tail, fread), idcol = "code") %>%
   left_join(samples_infos, by = "code") %>%
   separate(read_core_id, into=c(NA, "chr", "read_start", "read_end"), sep = ",") %>%
   mutate(U_state= case_when(
-    add_tail_pct_T>0.70 ~ "U-tail",
+    add_tail_pct_T>70 ~ "U-tail",
     TRUE ~ "non-U"))
 
 ######## \ DATA IMPORT
