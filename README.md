@@ -27,7 +27,7 @@ graph TD
 
 Clone the repository
 
-```
+```console
 git clone https://github.com/jackson-peter/FLEPseq2.git
 ```
 
@@ -55,7 +55,7 @@ minimap2_add_opts: "--secondary=no -G 5000"
 ## Usage
 
 To run the whole pipeline, just execute the runFLEPseq.sh file containing the snakemakes commands
-```
+```console
 conda activate snakemake # or mamba activate snakemake if it is installed
 # Go in the 'workflow' folder where the Snakefile is 
 cd FLEPseq2/workflow
