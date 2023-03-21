@@ -32,7 +32,7 @@ git clone https://github.com/jackson-peter/FLEPseq2.git
 ```
 
 A configuration file (.yaml) is required to run the workflow. An example is included in the FLEPseq2/config folder. You can modify it to suit your data.
-```
+```yaml
 basecalled_dir: "/ssd_workspace/jpeter/ssData/Guppy_basecalling/RUN11_F/workspace/"
 outdir: "/home/jpeter/DATA/FLEPseq/RUN11_F/"
 barcode_corr: "/home/jpeter/DATA/FLEPseq/RUN11_F/barcode_correspondance.tsv"
