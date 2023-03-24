@@ -1,6 +1,6 @@
-basecalled_dir: "/ssd_workspace/jpeter/ssData/Guppy_basecalling/RUN11_F/workspace/"
-outdir: "/home/jpeter/DATA/FLEPseq/RUN11_F/"
-barcode_corr: "/home/jpeter/DATA/FLEPseq/RUN11_F/barcode_correspondance.tsv"
+basecalled_dir: "/ssd_workspace/jpeter/ssData/Guppy_basecalling/RUN07_20230124/workspace/"
+outdir: "/home/jpeter/DATA/FLEPseq/RUN07_Rep21_graines_seches_v2"
+barcode_corr: "/home/jpeter/DATA/FLEPseq/RUN07_Rep21_graines_seches_v2/barcode_correspondance.tsv"
 
 runs_dir: "1_Runs"
 mapping_dir: "2_Mapping"

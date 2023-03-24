@@ -23,6 +23,16 @@ graph TD
     E --> |plot_tail.R| F(result.merged.parts.csv)
 
 ```
+## Data Preparation
+
+the fastq files of each sample (genotype) have to be concatenated in the output directory:
+```console
+mkdir -p ~/DATA/FLEPseq/RUN11_F/1_Runs
+
+cat barcode12/*.fastq.gz > ~/DATA/FLEPseq/RUN11_F/1_Runs/barcode12.fastq.gz
+cat barcode13/*.fastq.gz > ~/DATA/FLEPseq/RUN11_F/1_Runs/barcode13.fastq.gz
+```
+
 ## Getting started
 
 Clone the repository

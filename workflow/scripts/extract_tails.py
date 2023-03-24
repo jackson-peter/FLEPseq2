@@ -33,12 +33,15 @@ REV=("R-F", "R-R", "R-N", "R-UF", "R-UUR", "R-UR", "N-F", "N-UF", "UF-F", "UR-F"
 @click.option('-d', '--debug', is_flag=True, help="for developping purposes, prints additional information")
 
 def main(inadapter, inseq, out, constant_seq="CTGAC", umi_seq="NNNNNNNNNN", adapt_seq="CTGTAGGCACCATCAAT", verbose=False, debug=False):
-    fields = ['read_core_id', 'read_exon_total_num','mRNA', 'mRNA_intron_num', 'retention_introns',
+    fields = ['read_core_id', 'chr', 'read_exon_total_num','mRNA', "mRNA_start", "mRNA_end", 'mRNA_intron_num', 'retention_introns',
               'polya_start_raw', 'polya_end_raw','polya_start_base', 'polya_end_base', 
               'init_polya_start_base', 'init_polya_end_base','primer_type', 'polya_length', 'init_polya_length']
     dtypes= {'read_core_id': str,
+             'chr': str,
              'read_exon_total_num': int,
              'mRNA': str,
+             'mRNA_start': int,
+             'mRNA_end' : int,
              'mRNA_intron_num': int,
              'retention_introns': str,
              'polya_start_base': int,
