@@ -88,8 +88,7 @@ rule adapterFinder:
 rule polya_caller:
     input:
         adapters = rules.adapterFinder.output.adapters,
-        #summary = RUNS_DIR / "{sample}.sequencing_summary.txt",
-        summary = Path(config["runs_dir"], "sequencing_summary.txt"),
+        summary = Path(config["sequencing_summary"]),
         fast5_dir = Path(config["basecalled_dir"]),
     output:
         polya = Path(config["polyA_dir"],"{sample}.polya_tail.results.txt")

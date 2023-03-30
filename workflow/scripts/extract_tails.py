@@ -26,11 +26,11 @@ FWD=("F-R", "F-UR", "F-UUR", "F-UF", "F-F", "F-N", "N-R", "N-N", "N-UR", "N-UUR"
 REV=("R-F", "R-R", "R-N", "R-UF", "R-UUR", "R-UR", "N-F", "N-UF", "UF-F", "UR-F", "UR-N", "UR-UF", "UR-UR", "UR-UUR", "UUR-F", "UUR-N", "UUR-UF", "UUR-UUR")
  
 @click.command()
-@click.option('-i', '--inadapter', help='Input adapter file', required=True, type=click.Path(exists=True))                         
-@click.option('-s', '--inseq', help='Input read fastq file', required=True, type=click.Path(exists=True))                             
-@click.option('-o', '--out', help='Output adapter information of each read', required=True)
-@click.option('-v', '--verbose', is_flag=True, help="Print sequences with colors for polytail, adapter and delimiter")
-@click.option('-d', '--debug', is_flag=True, help="for developping purposes, prints additional information")
+@click.option('--inadapter', help='Input adapter file', required=True, type=click.Path(exists=True))                         
+@click.option('--inseq', help='Input read fastq file', required=True, type=click.Path(exists=True))                             
+@click.option('--out', help='Output adapter information of each read', required=True)
+@click.option('--verbose', is_flag=True, help="Print sequences with colors for polytail, adapter and delimiter")
+@click.option('--debug', is_flag=True, help="for developping purposes, prints additional information")
 
 def main(inadapter, inseq, out, constant_seq="CTGAC", umi_seq="NNNNNNNNNN", adapt_seq="CTGTAGGCACCATCAAT", verbose=False, debug=False):
     fields = ['read_core_id', 'chr', 'read_exon_total_num','mRNA', "mRNA_start", "mRNA_end", 'mRNA_intron_num', 'retention_introns',
