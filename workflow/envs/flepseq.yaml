@@ -15,6 +15,7 @@ dependencies:
     - bzip2
     - pysam
     - python>=3.9
+    - git
     - seqkit
     - regex
     - pyfastx

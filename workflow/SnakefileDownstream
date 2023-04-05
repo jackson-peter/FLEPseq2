@@ -13,13 +13,13 @@ os.environ["PATH"] += os.pathsep + SCRIPTS_PATH
 
 rule all:
     input:
-        "done.txt"
+        "version.log"
 
 
 rule plot_three_p_tails:
     input:
         barcode_corr = Path(config["barcode_corr"])
-    output: "done.txt"
+    output: "version.log"
     params: 
         Utail_barplot = Path(config["tail_dir"], "AddTail_length_barplot.pdf"),
         Utail_barplot_zoom=Path(config["tail_dir"], "AddTail_length_barplot_zoom.pdf"),
@@ -38,7 +38,7 @@ rule plot_three_p_tails:
     shell:
         """    
         plot_tail.R {params.suffix_add} {params.tail_dir} {input.barcode_corr}
-        touch {output}
+        git -C {SCRIPTS_PATH} describe  --tags --long --dirty > {output}
         """
 
 
