@@ -35,10 +35,11 @@ cat barcode14/*.fastq.gz > ~/DATA/FLEPseq/RUN11_F/1_Runs/barcode14.fastq.gz
 
 A barcode correspondance file (tab separated) is required and looks as follows:
 
-barcode12	WT
-barcode13	mut1
-barcode14	mut2
-
+|  |  |
+| ----------- | ------------|
+| barcode12   | WT          |
+| barcode13   | mut1        |
+| barcode14   | mut2        |
 
 The first line will be the reference for statistical tests.
 
