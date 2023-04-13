@@ -1,8 +1,8 @@
 ### EXPERIMENT SPECIFIC 
-basecalled_dir: "/ssd_workspace/jpeter/ssData/Guppy_basecalling/RUN12_Rep18_GS/workspace/" # Path to fast5 files
-outdir: "/home/jpeter/DATA/FLEPseq/RUN12_GS"
-barcode_corr: "/home/jpeter/DATA/FLEPseq/RUN12_GS/barcode_correspondance.tsv"
-sequencing_summary: "/home/jpeter/DATA/FLEPseq/RUN12_GS/sequencing_summary.txt"
+basecalled_dir: "/ssd_workspace/jpeter/ssData/Guppy_basecalling/RUN10_rep17_GS/Col0_urt1_heso1_uh/workspace/" # Path to fast5 files
+outdir: "/home/jpeter/DATA/FLEPseq/RUN10_rep17_GS_v4/"
+barcode_corr: "/home/jpeter/DATA/FLEPseq/RUN10_rep17_GS_v4/barcode_correspondance.tsv"
+sequencing_summary: "/home/jpeter/DATA/FLEPseq/RUN10_rep17_GS_v4/1_Runs/sequencing_summary.txt"
 
 ### OUTPUT FILES ORGANIZATION
 runs_dir: "1_Runs"

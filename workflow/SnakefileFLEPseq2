@@ -123,6 +123,7 @@ rule merge_read_info:
         polya = rules.polya_caller.output.polya
     output:
         read_info = Path(config["polyA_dir"], "{sample}.read_info.result.merged.txt")
+        read_info_log = Path(config["polyA_dir"], "{sample}.read_info.result.merged.txt.log")
     conda: 
         "envs/flepseq.yaml"
     threads: 
