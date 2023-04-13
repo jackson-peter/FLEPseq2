@@ -30,7 +30,17 @@ mkdir -p ~/DATA/FLEPseq/RUN11_F/1_Runs
 
 cat barcode12/*.fastq.gz > ~/DATA/FLEPseq/RUN11_F/1_Runs/barcode12.fastq.gz
 cat barcode13/*.fastq.gz > ~/DATA/FLEPseq/RUN11_F/1_Runs/barcode13.fastq.gz
+cat barcode14/*.fastq.gz > ~/DATA/FLEPseq/RUN11_F/1_Runs/barcode14.fastq.gz
 ```
+
+A barcode correspondance file (tab separated) is required and looks as follows:
+
+barcode12	WT
+barcode13	mut1
+barcode14	mut2
+
+
+The first line will be the reference for statistical tests.
 
 ## Getting started
 
