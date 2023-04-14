@@ -1,6 +1,7 @@
 #!/usr/bin/env Rscript
 library(tidyverse)
 library(optparse)
+library(data.table)
 
 #Version 0.1.1 Jia Jinbu 2021.02.03
 #add end3_alignment_scoreend3_alignment_score
@@ -68,7 +69,9 @@ filein_adapter <- opt$inadapter
 filein_polyA <- opt$inpolya
 data_type <- ifelse(substr(opt$type, 1, 1) %in% c("N", "n"), "Nanopore", "PacBio") 
 fileout <- opt$out
-log <- opt$out.log
+
+logs=c()
+logs <- append(logs, "LOGFILE")
 #fileout_stat <- args[6]
 
 MIN_POLYA_LENGTH <- 15
@@ -112,32 +115,32 @@ check_3_end_high_mapping <- function(data, limit=c(-5, 5)){
 #filter out duplicated read_core_id lines
 if (data_type == "Nanopore"){
 	primer <- read_tsv(filein_adapter, na="NA")
-	write(paste("nblines in inadapter file:", nrow(primer)), file=log, append=T)
+	logs <- append(logs, paste("nblines in inadapter file:", nrow(primer)))
 	primer <- primer %>% select(-read_align_strand) %>% filter(primer_score<=2)
-	write(paste("nblines inadapter filtered with primer score:", nrow(primer)), file=log, append=T)
+	logs <- append(logs, paste("nblines inadapter filtered with primer score:", nrow(primer)))
 	duplicated_read_core_id <- primer$read_core_id[duplicated(primer$read_core_id)]
 	primer <- primer[!(primer$read_core_id %in% duplicated_read_core_id), ]
-	write(paste("nblines in inadapter deduplicated:", nrow(primer)), file=log, append=T)
+	logs <- append(logs, paste("nblines in inadapter deduplicated:", nrow(primer)))
 
 	retention <- read_tsv(filein_retention, na="NA")
-	write(paste("nblines in retention file:", nrow(retention)), file=log, append=T)
+	logs <- append(logs, paste("nblines in retention file:", nrow(retention)))
 	polyA <- read_tsv(filein_polyA, na="NA")
-	write(paste("nblines in polyA file:", nrow(polyA)), file=log, append=T)
+	logs <- append(logs, paste("nblines in polyA file:", nrow(polyA)))
 
 	polyA <- select(polyA, -polya_type)
 	duplicated_read_core_id <- polyA$read_core_id[duplicated(polyA$read_core_id)]
 	
 	polyA <- polyA[!(polyA$read_core_id %in% duplicated_read_core_id), ]
-	write(paste("nblines polyA deduplicated", nrow(polyA)), file=log, append=T)
+	logs <- append(logs, paste("nblines polyA deduplicated", nrow(polyA)))
 
 	data <- inner_join(primer, polyA, by="read_core_id")
-	write(paste("nblines inner join inadapter and polya:", nrow(data)), file=log, append=T)
+	logs <- append(logs, paste("nblines inner join inadapter and polya:", nrow(data)))
 	gene_read_num <- nrow(retention)
 	data <- inner_join(retention, data, by="read_core_id")
-	write(paste("nblines after inner join with retention", nrow(data)), file=log, append=T)
+	logs <- append(logs, paste("nblines after inner join with retention", nrow(data)))
 	gene_read_has_primerR_num <- nrow(data)
 	data <- data %>% filter(mRNA_strand==rna_strand)
-	write(paste("nblines after filtering by strand", nrow(data)), file=log, append=T)
+	logs <- append(logs, paste("nblines after filtering by strand", nrow(data)))
 
 } else { #"PacBio"
 	retention <- read_tsv(filein_retention, na="NA")
@@ -151,7 +154,7 @@ if (data_type == "Nanopore"){
 	#for pacbio
 	data <- data %>% filter(mRNA_strand==read_strand)
 	gene_read_strand_right <- nrow(data)
-	write("log not implemented for PacBio yet", file=log, append=T)
+	logs <- append(logs, "log not implemented for PacBio yet")
 }
 
 #2. calculate end_polyA_type
@@ -196,8 +199,11 @@ tmp_flag = (data$mRNA_pos5==data$rel_mRNA_pos5) & (data$mRNA_pos3 == data$rel_mR
 gene_read_strand_right <- sum(tmp_flag)
 gene_read_not_consistent_rel_mRNA_pos <- nrow(data) - gene_read_strand_right
 data <- data[tmp_flag,]
-		
+
+logs <- append(logs, paste("nblines after filtering mRNA_pos and rel_mRNA_pos inconsistencies", nrow(data)))
 write_tsv(data, fileout)
+cat(logs, sep="\n", file=paste0(fileout, ".log"))
+
 
 #data_simple <- data %>% select(read_core_id, mRNA, mRNA_intron_num, type, 
 #					    rel_mRNA_pos5, rel_mRNA_pos3, retention_introns, 
