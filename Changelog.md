@@ -18,7 +18,16 @@ The pipeline tries to respect semver specs (https://semver.org/).
 # |
 # '--------- last tag
 ```
-## [Unreleased]
+## [v1.0.0] 18/04/2023
+
+First stable release of the pipeline.
+
+## [v0.2.0] 15/04/2023
+
+### Added
+ - a log for the merge_read_info.R to track the different steps (and the number of lines of each step)
+ - additional tail detection even when there is no polyA tail (some transcripts like the elongating_3_mapping_low_accuracy types will fail and therefore be ignored)
+
 
 ## [v0.1.1] - 05/04/2023
 
