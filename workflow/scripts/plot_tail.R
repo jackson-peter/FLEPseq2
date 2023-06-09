@@ -26,15 +26,16 @@ give.n <- function(x){
 }
 ######## \ FUNCTIONS
 
-######## DATA IMPORT
 
+######## DATA IMPORT
+# barcode correspondance
 samples_infos <- fread(sample_corresp, header = F, col.names = c("code", "sample")) %>% 
   mutate(add_tail_path=file.path(path=dir_add_tail,paste0(code, suffix_add_tail)))
-
-
 nlist_add_tail <- samples_infos$add_tail_path
-
 names(nlist_add_tail) <- samples_infos$code
+REF_genotype <- as.character(samples_infos[1, "sample"])
+
+# colors handling
 palette2_all <- grDevices::colors()
 palette2_no_gray <- palette2_all[grep("gr(a|e)y",             # Remove gray colors
                                       grDevices::colors(),
@@ -45,41 +46,111 @@ if ( nrow(samples_infos)==4 ) {
   my_colors <- sample(palette2_no_gray, nrow(samples_infos))
 }
 
-REF_genotype <- as.character(samples_infos[1, "sample"])
 
-df_uri <- rbindlist(lapply(nlist_add_tail, fread), idcol = "code") %>%
+# df_uri is the compilation of all raw files (!= barcodes) with some additional informations
+df_uri <- rbindlist(lapply(nlist_add_tail, fread, na.strings="NA"), idcol = "code") %>%
   left_join(samples_infos, by = "code") %>%
   separate(read_core_id, into=c(NA, "chr", "read_start", "read_end"), sep = ",") %>%
-  mutate(U_state= case_when(
-    add_tail_pct_T>70 ~ "U-tail",
-    TRUE ~ "non-U"))
+  mutate(
+    addtail_length = nchar(additional_tail),
+    U_state= case_when(
+      add_tail_pct_T>70 ~ "U-tail",
+      TRUE ~ "non-U"),
+    polya_length_nchar=case_when(!is.na(polytail) ~  nchar(polytail),
+                                 TRUE~0),
+    A_state=case_when(is.na(polytail) ~ "non-A",
+                      !is.na(polytail) ~ "A-tail"))
 
-######## \ DATA IMPORT
+df_uri$sample <- factor(df_uri$sample, levels=as.vector(samples_infos$sample))
 
-######## URIDYLATION
+mRNA_pctAU <- df_uri%>% group_by(sample, additional_tail, U_state, A_state, polytail, mRNA, .drop=FALSE) %>%
+  summarise(nb_reads=n())  %>%
+  group_by(sample, mRNA) %>%
+  mutate(total=sum(nb_reads)) %>%
+  filter(total>=50) %>%
+  arrange(sample, mRNA)
+mRNA_pctAU$sample <- factor(mRNA_pctAU$sample, levels=as.vector(samples_infos$sample))
 
-df_uri$tail_length <- nchar(df_uri$additional_tail)
 
-
+# table summarized by transcript, barcode and Ustate with % of uridylation for transcripts present in table more than 50
 mRNA_pctU <- df_uri%>% group_by(sample, U_state, mRNA, .drop=FALSE) %>%
   summarise(nb_reads=n())  %>%
   group_by(sample, mRNA) %>%
   mutate(total=sum(nb_reads), Percent=100*nb_reads/sum(nb_reads)) %>%
   filter(total>=50) %>%
   arrange(sample, mRNA)
+mRNA_pctU$sample <- factor(mRNA_pctU$sample, levels=as.vector(samples_infos$sample))
 
+mRNA_Utails <- mRNA_pctU %>% filter(U_state=="U-tail") # keep only uridylated
+
+# table summarized by transcript, barcode and Astate with % of uridylation for transcripts present in table more than 50
+mRNA_pctA <- df_uri%>% group_by(sample, A_state, mRNA, .drop=FALSE) %>%
+  summarise(nb_reads=n())  %>%
+  group_by(sample, mRNA) %>%
+  mutate(total=sum(nb_reads), Percent=100*nb_reads/sum(nb_reads)) %>%
+  filter(total>=50) %>%
+  arrange(sample, mRNA)
+mRNA_pctA$sample <- factor(mRNA_pctA$sample, levels=as.vector(samples_infos$sample))
+
+mRNA_Atails <- mRNA_pctA %>% filter(A_state=="A-tail") # keep only adenylated
+
+# table summarized by barcode and ustate to have the proportion of uridylated transcripts (or not) by barcode
 global_pctU <- df_uri %>% group_by(sample, U_state, .drop=FALSE) %>%
   summarise(nb_reads=n())  %>%
   group_by(sample) %>%
   mutate(total=sum(nb_reads), Percent=100*nb_reads/sum(nb_reads))
-
-mRNA_pctU$sample <- factor(mRNA_pctU$sample, levels=as.vector(samples_infos$sample))
 global_pctU$sample <- factor(global_pctU$sample, levels=as.vector(samples_infos$sample))
 
-mRNA_Utails <- mRNA_pctU %>% filter(U_state=="U-tail")
+global_Utails <- global_pctU%>% filter(U_state=="U-tail") # keep only uridylated
 
-global_Utails <- global_pctU%>% filter(U_state=="U-tail")
+# table summarized by barcode and ustate to have the proportion of uridylated transcripts (or not) by barcode
+global_pctA <- df_uri %>% group_by(sample, A_state, .drop=FALSE) %>%
+  summarise(nb_reads=n())  %>%
+  group_by(sample) %>%
+  mutate(total=sum(nb_reads), Percent=100*nb_reads/sum(nb_reads))
+global_pctA$sample <- factor(global_pctA$sample, levels=as.vector(samples_infos$sample))
 
+global_Atails <- global_pctA%>% filter(A_state=="A-tail") # keep only adenylated
+######## \ DATA IMPORT
+
+######## URIDYLATION
+
+ggplot(mRNA_pctAU, aes(x=nchar(polytail), y=nchar(additional_tail), group=sample, colour=sample)) +
+  geom_point() +
+  facet_wrap(~sample) +
+  scale_color_manual(values=my_colors) +
+  theme_bw() +
+  ggtitle("Additional tail length in function of polyA length")
+
+
+ggsave(filename =file.path(dir_add_tail,"AddTail_vs_PolyA.pdf"), width = 5, height = 6, dpi = 300)
+
+
+ggplot(mRNA_pctAU, aes(x=U_state, y=nchar(polytail), color=sample, fille=sample)) +
+  geom_boxplot(outlier.shape = '.') +
+  facet_wrap(~sample) +
+  scale_color_manual(values=my_colors) +
+  scale_fill_manual(values=my_colors) +
+  theme_bw() +
+  ggtitle("PolyA length in function if uridylated or not")
+
+ggsave(filename =file.path(dir_add_tail,"PolyA_length_Ustate.pdf"), width = 5, height = 6, dpi = 300)
+
+ggplot(mRNA_pctAU, aes(x=A_state, y=nchar(additional_tail), color=sample, fille=sample)) +
+  geom_boxplot(outlier.shape = '.') +
+  facet_wrap(~sample) +
+  scale_color_manual(values=my_colors) +
+  scale_fill_manual(values=my_colors) +
+  theme_bw() +
+  ggtitle("addtail length in function if polyadenylated or not")
+
+ggsave(filename =file.path(dir_add_tail,"PolyA_length_Ustate.pdf"), width = 5, height = 6, dpi = 300)
+
+
+ggsave(filename =file.path(dir_add_tail,"AddTail_vs_PolyA.pdf"), width = 5, height = 6, dpi = 300)
+
+# 1
+# BOXPLOT showing distribution OF % Uridylation (1 value by mRNA by barcode)
 p1 <- ggplot(mRNA_Utails, aes(x=sample, y=Percent, fill=sample)) + 
   geom_boxplot(outlier.shape = '.', show.legend = FALSE) +
   stat_compare_means(label = "p.format", method = "wilcox.test",ref.group = REF_genotype, size = 2.9) +
@@ -90,6 +161,7 @@ p1 <- ggplot(mRNA_Utails, aes(x=sample, y=Percent, fill=sample)) +
   theme(axis.text.x=element_text(angle=45, hjust=1)) +
   theme(plot.title = element_text(size = 12), plot.subtitle = element_text(size=10))
 
+# BARPLOT of global percentage of uridylation
 p2 <- ggplot(global_Utails, aes(x=sample, y=Percent, fill=sample)) + 
   geom_bar(stat="identity", color="black", show.legend = FALSE) +
   ggtitle("Global percentage") +
@@ -98,14 +170,16 @@ p2 <- ggplot(global_Utails, aes(x=sample, y=Percent, fill=sample)) +
   theme(axis.text.x=element_text(angle=45, hjust=1)) +
   theme(plot.title = element_text(size = 12))
 
-
 p <- grid.arrange(p2, p1, ncol=2, nrow = 1, widths=c(3,5), heights=c(4), top = textGrob(paste("Percent of uridylation of",paste(as.character(as.vector(samples_infos$sample)), collapse=", ")),gp=gpar(fontsize=14,font=2)))
 
 ggsave(filename =file.path(dir_add_tail,"AddTail_Percent_of_uridylation.pdf"), p, width = 8, height = 4, dpi = 300)
 
-df_uri$sample <- factor(df_uri$sample, levels=as.vector(samples_infos$sample))
+# /1
 
-p <- ggplot(df_uri%>%filter(U_state=="U-tail")) + geom_bar(aes(tail_length, fill=sample), color="black") +
+
+
+
+p <- ggplot(df_uri%>%filter(U_state=="U-tail")) + geom_bar(aes(addtail_length, fill=sample), color="black") +
   facet_wrap(~sample, ncol=1, scales="free") +
   #scale_x_continuous(limits=c(0,20), breaks=seq(0,20,by=2)) +
   scale_fill_manual(values = my_colors) +
@@ -116,7 +190,7 @@ p <- ggplot(df_uri%>%filter(U_state=="U-tail")) + geom_bar(aes(tail_length, fill
 ggsave(filename =file.path(dir_add_tail,"AddTail_length_barplot.pdf"), p, width = 5, height = 6, dpi = 300)
 
 p <- ggplot(df_uri%>%filter(U_state=="U-tail",
-                            tail_length<30)) + geom_bar(aes(tail_length, fill=sample), color="black") +
+                            addtail_length<30)) + geom_bar(aes(addtail_length, fill=sample), color="black") +
   facet_wrap(~sample, ncol=1, scales="free") +
   #scale_x_continuous(limits=c(0,20), breaks=seq(0,20,by=2)) +
   scale_fill_manual(values = my_colors) +
@@ -145,7 +219,7 @@ p <- ggplot(df_uri_add_tail_long_summ, aes(x=sample, y=mean_add_tail_pct, fill=s
 ggsave(filename =file.path(dir_add_tail,"Addtail_BaseComposition.pdf"), p, width = 5, height = 6, dpi = 300)
 
 
-p <- ggplot(df_uri_add_tail_long, aes(x=sample, y=tail_length, fill=sample)) + 
+p <- ggplot(df_uri_add_tail_long, aes(x=sample, y=addtail_length, fill=sample)) + 
   geom_boxplot(outlier.shape = '.') +
   scale_fill_manual(values = my_colors) +
   theme_bw() +
@@ -159,7 +233,7 @@ ggsave(filename =file.path(dir_add_tail,"Utail_length_bp.pdf"), p, width = 5, he
 
 ######## PolyA
 
-df_uri$polya_length_nchar <- nchar(df_uri$polytail)
+
 
 ggplot(df_uri %>% filter(polya_length_nchar<200,
                          polya_length_nchar>10)) +
@@ -172,6 +246,15 @@ ggplot(df_uri %>% filter(polya_length_nchar<200,
 
 ggsave(filename =file.path(dir_add_tail,"PolyA_length_nchar.pdf"),width = 5, height = 6, dpi = 300)
 
+ggplot(df_uri %>% filter(polya_length_nchar<30)) +
+  geom_density(aes(polya_length_nchar, fill=sample, color=sample), alpha=0.2, lwd=1) +
+  facet_wrap(~U_state) +
+  scale_fill_manual(values = my_colors) +
+  scale_color_manual(values = my_colors) +
+  theme_bw() +
+  ggtitle("Distribution of short Poly-A tail sizes", subtitle = "polyA size=number of characters PolyA")
+
+ggsave(filename =file.path(dir_add_tail,"PolyA_length_nchar_short.pdf"),width = 5, height = 6, dpi = 300)
 
 ggplot(df_uri %>% filter(polya_length_nchar<200,
                      polya_length_nchar>10)) +

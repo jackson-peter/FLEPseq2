@@ -31,6 +31,9 @@ mkdir -p ~/DATA/FLEPseq/RUN11_F/1_Runs
 cat barcode12/*.fastq.gz > ~/DATA/FLEPseq/RUN11_F/1_Runs/barcode12.fastq.gz
 cat barcode13/*.fastq.gz > ~/DATA/FLEPseq/RUN11_F/1_Runs/barcode13.fastq.gz
 cat barcode14/*.fastq.gz > ~/DATA/FLEPseq/RUN11_F/1_Runs/barcode14.fastq.gz
+
+# it is possible that this command fails if there is too many fastq.gz files. The follwing is an alternative to circumvent
+for f in barcode05/*.fastq.gz; do cat $f >> ~/DATA/FLEPseq/Clean_Runs/RUN16_GI/1_Runs/barcode05.fastq.gz; done
 ```
 
 A barcode correspondance file (tab separated) is required and looks as follows:
