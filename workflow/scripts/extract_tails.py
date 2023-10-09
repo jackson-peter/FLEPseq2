@@ -29,10 +29,9 @@ REV=("R-F", "R-R", "R-N", "R-UF", "R-UUR", "R-UR", "N-F", "N-UF", "UF-F", "UR-F"
 @click.option('--inadapter', help='Input adapter file', required=True, type=click.Path(exists=True))                         
 @click.option('--inseq', help='Input read fastq file', required=True, type=click.Path(exists=True))                             
 @click.option('--out', help='Output adapter information of each read', required=True)
-@click.option('--verbose', is_flag=True, help="Print sequences with colors for polytail, adapter and delimiter")
 @click.option('--debug', is_flag=True, help="for developping purposes, prints additional information")
 
-def main(inadapter, inseq, out, constant_seq="CTGAC", umi_seq="NNNNNNNNNN", adapt_seq="CTGTAGGCACCATCAAT", verbose=False, debug=False):
+def main(inadapter, inseq, out, debug, constant_seq="CTGAC", umi_seq="NNNNNNNNNN", adapt_seq="CTGTAGGCACCATCAAT"):
     fields = ['read_core_id', 'chr', 'read_exon_total_num','mRNA', "mRNA_start", "mRNA_end", 'mRNA_intron_num', 'retention_introns',
               'polya_start_raw', 'polya_end_raw','polya_start_base', 'polya_end_base', 
               'init_polya_start_base', 'init_polya_end_base','primer_type', 'polya_length', 'init_polya_length', 'type']
@@ -71,10 +70,8 @@ def main(inadapter, inseq, out, constant_seq="CTGAC", umi_seq="NNNNNNNNNN", adap
     df['sense']= np.where(df["primer_type"].isin(FWD), "FWD", "REV")
     # This step is to avoid inconsistencies when calculating boundaries (polya, additional tail...)
     df['init_polya_end_base'] = np.where((df['init_polya_start_base'] == df['init_polya_end_base']) , df['init_polya_end_base']-1, df['init_polya_end_base'])
-
-
-    df[['polytail','additional_tail','adapter', 'dist_adapter','coords_in_read', 'comment']] = df.swifter.apply(get_three_primes_parts_row, adapt_seq=adapt_seq, axis=1 )
-    
+    df[['polytail','additional_tail','adapter', 'dist_adapter','coords_in_read', 'comment']] = df.apply(get_three_primes_parts_row, adapt_seq=adapt_seq, axis=1, debug=debug)
+    #df[['polytail','additional_tail','adapter', 'dist_adapter','coords_in_read', 'comment']] = df.swifter.apply(get_three_primes_parts_row, adapt_seq=adapt_seq, axis=1, debug=debug)
     df = pd.concat([df, df.apply(lambda col: get_composition(col["polytail"], "A_tail"), axis=1, result_type="expand")], axis = 1)
     df = pd.concat([df, df.apply(lambda col: get_composition(col["additional_tail"], "add_tail"), axis=1, result_type="expand")], axis = 1)
     df.drop('read_seqs', axis=1, inplace=True)
@@ -92,16 +89,14 @@ def main(inadapter, inseq, out, constant_seq="CTGAC", umi_seq="NNNNNNNNNN", adap
     with open(out+'.log', 'w') as outlog:
         print(log_dict, file=outlog)
 
-def get_three_primes_parts_row(row, adapt_seq, debug=False):
-    
+def get_three_primes_parts_row(row, adapt_seq, debug):
     read_seq=row['read_seqs']
     primer_type=row['primer_type']
 
     polytail=np.nan
     additional_tail=np.nan
     try:
-        if primer_type in FWD:
-            
+        if primer_type in FWD:            
             gene_start_in_read=0
             gene_end_in_read=row['init_polya_start_base']-1
             gene = read_seq[:gene_end_in_read]
@@ -169,11 +164,17 @@ def get_three_primes_parts_row(row, adapt_seq, debug=False):
         
     dist_adapter=edlib.align(adapter, adapt_seq,task="path", mode='HW')["editDistance"]
     reconstructed_seq=gene+polytail+additional_tail+ adapter
-    reconstructed_coords_in_read=f"{gene_start_in_read}:{gene_end_in_read}:{polytail_start_in_read}:{polytail_end_in_read}:{add_tail_start_in_read}:{add_tail_end_in_read}:{adapt_start_in_read}:{adapt_end_in_read}"
 
+    reconstructed_coords_in_read=f"{gene_start_in_read}:{gene_end_in_read}:{polytail_start_in_read}:{polytail_end_in_read}:{add_tail_start_in_read}:{add_tail_end_in_read}:{adapt_start_in_read}:{adapt_end_in_read}"
+    
+    # print(debug)
     if debug:
         print("")
         print("###########")
+        print(row)
+        print("------------------")
+        print(read_seq)
+        print(primer_type)
         print("gene")
         print(gene)
         print("polytail")
@@ -182,6 +183,7 @@ def get_three_primes_parts_row(row, adapt_seq, debug=False):
         print(additional_tail)
         print("adapter")
         print(adapter)
+        input("press a key")
 
 
     try:

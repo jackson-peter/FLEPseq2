@@ -99,4 +99,5 @@ The other requirements will be handled directly by snakemake with the --use-cond
 
 ## Usefull links
 
-- Research article describing FLEPSeq2: https://www.nature.com/articles/s41596-021-00581-7
+- Research article describing FLEPSeq: https://www.nature.com/articles/s41596-021-00581-7
+- Research article for FLEPSeq2: https://www.nature.com/articles/s41477-022-01224-9

@@ -147,6 +147,7 @@ def main(inbam, inseq, out, mode, threads):
                     
     seq_lists = extract_bam_clip_fasta_seq_split(inbam, inseq, split=threads)
     threads = len(seq_lists)
+
     
     with joblib.Parallel(threads) as pool:  
         
@@ -358,7 +359,6 @@ def iter_bam_clip_seq(filein_bam, filein_seq, pad_length=20):
         right_clip_length += pad_length
     
         seq = read.query_sequence
-        #print(seq)
         if left_clip_type == 5 or right_clip_type == 5:
             #if Hard clip, need origin_seqs to extract origin seq
             #In this case, if alignment direction is minus, 
@@ -585,8 +585,6 @@ def iter_blast_by_read(filein, is_file=True):
                 IN = filein.splitlines()
             for l in IN:
                 d = l.rstrip("\n").split("\t")
-                print("d:")
-                print(d)
                 query = d[0]
                 primer_name = d[1]
                 start, end = int(d[6]), int(d[7])
@@ -710,8 +708,6 @@ def extract_read_primer_type_from_balst(filein_blast,
             #pair_end[0][2] is read_clip_name.split(",")
             #00000449-e191-4eda-92e7-c4b2843daba2,chr4,8523083,8523682,\
             #+,660,58,55,20,5   --> 4:10
-            print("PE")
-            print(pair_end)
             read_align_strand, read_length, \
                 left_length, right_length, \
                 clip_inner_length, first_end_type = pair_end[0][2][4:10]
@@ -808,7 +804,7 @@ def extract_read_primer_type_from_balst(filein_blast,
                  str(genome_align_start), str(genome_align_end),
                  str(primer_score), polyA_type, f_primer_type, str(f_primer_start), str(f_align_end), 
                  r_primer_type, str(r_primer_start), str(r_align_start)]
-            print("RES:", "\t".join(r) + "\n")
+
             yield("\t".join(r) + "\n")
     
     header = ("read_core_id\tread_align_strand\trna_strand\tread_length\t"
