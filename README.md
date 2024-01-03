@@ -10,6 +10,7 @@ We added an extra step (extract_tails.py) to extract the additionnal tail after 
 Some minor changes have been done to the original FLEPSeq2 code:
 - Handling directly FASTQ files without needing to convert them to FASTA
 
+
 Steps of the workflow
 ```mermaid
 graph TD
