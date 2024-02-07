@@ -5,8 +5,6 @@ library(ggpubr)
 library(grid)
 library(gridExtra)
 
-## TO DO: Change name of script and check if ok for github
-
 ######## ARGUMENTS
 args = commandArgs(trailingOnly=TRUE)
 

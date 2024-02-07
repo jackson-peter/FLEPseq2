@@ -2,11 +2,37 @@ library(tidyverse)
 library(data.table)
 library(rtracklayer)
 
+##### ARGUMENTS #####
+args = commandArgs(trailingOnly=TRUE)
 
+# annotation file in gtf format
+gtf <- args[1]
+
+# subset list of genes (repr gene model or canonical list...)
+gene_list_f <- args[2]
+gene_list <- fread(gene_list_f) %>%
+  select(c(V4))
+colnames(gene_list) <- c("AGI")
+# output directory
+outdir <- args[3]
+
+# basename for gene lists files for flepseq
+suffix <- args[4]
+
+# outfiles names
+out_ie <- file.path(outdir, paste0("intron_exon_", suffix, ".bed"))
+out_si <- file.path(outdir, paste0("select_intron_", suffix, ".bed"))
+
+
+##### FUNCTIONS #####
+
+# allows to shift up all line from a column n times. this is usefull here because the start on an intron is the end of the previous exon.
+# the same for the end of intron: start of next exon
 shift <- function(x, n){
   c(x[-(seq(n))], rep(NA, n))
 }
 
+# main function here
 build_intronexon <- function(gtf, gene_list,out_ie, out_si) {
   gtf_df_exon <- as_tibble(import(gtf)) %>%
     filter(type %in%  "exon") %>%
@@ -68,13 +94,8 @@ build_intronexon <- function(gtf, gene_list,out_ie, out_si) {
 
 }
 
-gtf <- "/shared/home/jpeter/Data/ReferenceGenomes/A_thaliana/Araport11/Araport11_GTF_genes_transposons.current.gtf"
-repr_genes_ara11 <- fread("/shared/home/jpeter/Data/ReferenceGenomes/A_thaliana/Araport11/araport11.representative.gene_model.bed") %>%
-  select(c(V4))
-colnames(repr_genes_ara11) <- c("AGI")
 
-out_ie <- "/shared/home/jpeter/Scripts/FLEPseq2/Genes_list/araport11_repr_gene_model/intron_exon_ara11_repr.bed"
-out_si <- "/shared/home/jpeter/Scripts/FLEPseq2/Genes_list/araport11_repr_gene_model/select_intron_ara11_repr.bed"
 
-build_intronexon(gtf, repr_genes_ara11$AGI, out_ie, out_si)
+
+build_intronexon(gtf, gene_list$AGI, out_ie, out_si)
 
