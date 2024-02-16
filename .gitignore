@@ -2,4 +2,4 @@ logs/
 slurm/
 .snakemake/
 workflow/.snakemake
-
+/Genes_list/human_flepseq/

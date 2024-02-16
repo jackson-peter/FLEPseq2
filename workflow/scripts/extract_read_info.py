@@ -71,6 +71,8 @@ See more by --help.
                     span_intron_num         6            #the total number of introns the read overlapping (3-8). The first span intron is f_feature_num, the last span intron is l_feature_num - 1.
                     """, 
                     required=True)
+
+
 def main(inbam, inbed, out):
     """
     Assign the read to mRNAs via comparing the read exon position with the feature (exon/intron)
@@ -544,6 +546,7 @@ def compare_bam_read_to_exon_intron(file_bam, file_exon_intron):
     
     results = blocks_in_blocks(block_xs, block_ys)
     results = sorted_results_by_read(results)
+    print(results)
     return results
     
 def read_mRNA_exon_num_and_mRNA_pos(fileexon_bed):
@@ -694,6 +697,11 @@ def extract_read_information(file_bam, file_exon_intron):
             
             read_exon_start, read_exon_end = int(read_exon_start), int(read_exon_end)
             feature_start, feature_end = int(feature_start), int(feature_end)
+
+            print(read_exon_name, feature_name, strand, 
+                type5, pos5, type3, pos3, 
+                chr_, read_exon_start, read_exon_end, read_strand, 
+                feature_start, feature_end, feature_strand)
         
             #1. reverse type5 and type3, and reverse pos5, pos3 if pos3 < pos5
             pos5, pos3 = int(pos5), int(pos3)

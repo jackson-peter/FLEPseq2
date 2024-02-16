@@ -7,33 +7,21 @@ args = commandArgs(trailingOnly=TRUE)
 
 # annotation file in gtf format
 gtf <- args[1]
+gtf <- "~/Data/ReferenceGenomes/S_cerevisiae/S288C_reference_genome_R64-1-1_20110203/Saccharomyces_cerevisiae.R64-1-1.111.gtf"
 gtf_col <- args[2]
-
-# subset list of genes (repr gene model or canonical list...)
-gene_list_f <- args[3]
-gene_list_col <- args[4]
-
-print(gene_list_col)
-cmd=paste0('grep -v "^#" ', gene_list_f)
-gene_list <- as_tibble(fread(cmd, na.strings = ""))%>% 
-  drop_na(gene_list_col) %>% 
-  select({{gene_list_col}})
-
-print(gene_list)
-
-colnames(gene_list) <- c("list")
+gtf_col <- "gene_id"
 
 # output directory
-outdir <- args[5]
+outdir <- args[3]
+outdir="~/Scripts/FLEPseq2/Genes_list/yeast_flepseq/"
 
 # basename for gene lists files for flepseq
-suffix <- args[6]
-
+suffix <- args[4]
+suffix <- "yeast"
 # outfiles names
 out_ie <- file.path(outdir, paste0("intron_exon_", suffix, ".bed"))
 out_si <- file.path(outdir, paste0("select_intron_", suffix, ".bed"))
 
-#chroms <- c("NC_000001.11","NC_000002.12","NC_000003.12","NC_000004.12","NC_000005.10","NC_000006.12","NC_000007.14","NC_000008.11","NC_000009.12","NC_000010.11","NC_000011.10","NC_000012.12","NC_000013.11","NC_000014.9","NC_000015.10","NC_000016.10","NC_000017.11","NC_000018.10","NC_000019.10","NC_000020.11","NC_000021.9","NC_000022.11","NC_000023.11","NC_000024.10")
 
 ##### FUNCTIONS #####
 
@@ -52,15 +40,16 @@ build_intronexon <- function(gtf, gene_list,out_ie, out_si) {
     #filter(seqnames %in% chroms) %>%
     filter(type %in%  "exon") %>% 
     mutate(start=start-1) %>%
-    filter((!!as.name(gtf_col)) %in% gene_list) %>%
-#    filter(gtf_col %in% gene_list) %>%
+    filter(tag=="Ensembl_canonical") %>%
+    #    filter(gtf_col %in% gene_list) %>%
     group_by(!!as.name(gtf_col), type) %>%
     mutate(group_id = case_when(strand=="+" ~ row_number(),
                                 strand=='-' ~ rev(row_number())),
            nb_exon=max(group_id))
   
-  print(gtf_df_exon)
+  #gtf_df_exon %>% filter(gene_id=="YDR129C")
   
+
   print("### building intron_plus list from gtf")
   
   # create introns entries using nb exons and strand
@@ -70,7 +59,11 @@ build_intronexon <- function(gtf, gene_list,out_ie, out_si) {
     mutate(intron_start=end, type="intron")
   gtf_df_intron_plus$intron_end <- shift(gtf_df_intron_plus$start, 1)
   print(gtf_df_intron_plus)
-
+  
+  #c("seqnames", "start", "end", "width", "strand", "source", "type",  "score", "phase", "gene_id", "gene_name")
+  
+  #gtf_df_intron_plus %>% filter(gene_id=="YDR376W")
+  
   gtf_df_intron_plus <- gtf_df_intron_plus %>%
     filter(group_id!=nb_exon)%>%
     group_by(!!as.name(gtf_col)) %>%
@@ -78,20 +71,19 @@ build_intronexon <- function(gtf, gene_list,out_ie, out_si) {
   print(gtf_df_intron_plus)
   
   print("### building intron_minus list from gtf")
-
+  
   # strand -
   gtf_df_intron_minus <- gtf_df_exon %>%
-    filter(strand=='-') %>%
+    filter(strand=='-') %>% 
     arrange(!!as.name(gtf_col), start) %>%
     mutate(intron_start=end, type="intron")
   gtf_df_intron_minus$intron_end <- shift(gtf_df_intron_minus$start, 1)
-
+  
   gtf_df_intron_minus <- gtf_df_intron_minus%>%
-    filter(group_id!=nb_exon) %>%
-    filter(group_id!=0)%>%
+    filter(group_id!=nb_exon)%>%
     group_by(!!as.name(gtf_col)) %>%
     arrange(!!as.name(gtf_col), desc(group_id), type)
-  print(gtf_df_intron_minus)
+  #print(gtf_df_intron_minus %>% filter(gene_id=="YDR129C"))
   print("### merging introns + and -")
   
   # bind intron + and - and rename columns to avoid confusion
@@ -101,8 +93,8 @@ build_intronexon <- function(gtf, gene_list,out_ie, out_si) {
     dplyr::rename("end"="intron_end")
   print(gtf_df_intron)
   print("### merging introns and exons")
-
-
+  
+  
   # now bind introns and exons and sort file so it makes sense
   gtf_df_intronexon <- rbind(gtf_df_exon, gtf_df_intron) %>%
     mutate(type_id=paste0(type, group_id))  %>%
@@ -111,6 +103,8 @@ build_intronexon <- function(gtf, gene_list,out_ie, out_si) {
            point='.') %>%
     ungroup() %>%
     select(c(seqnames, start, end, reg_name, point, strand))
+  #test <- gtf_df_intronexon %>% filter(gene_id=="YBL091C")
+  
   print(gtf_df_intronexon)
   print("### outputing files")
   
@@ -123,12 +117,12 @@ build_intronexon <- function(gtf, gene_list,out_ie, out_si) {
               select(intron_id),
             file=out_si, col_names = FALSE)
   print("###DONE.")
-
+  
 }
 
-
+print(out_ie)
+print(out_si)
 
 
 build_intronexon(gtf, gene_list$list, out_ie, out_si)
-print(out_ie)
-print(out_si)
+

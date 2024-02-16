@@ -33,7 +33,6 @@ suffix <- args[6]
 out_ie <- file.path(outdir, paste0("intron_exon_", suffix, ".bed"))
 out_si <- file.path(outdir, paste0("select_intron_", suffix, ".bed"))
 
-#chroms <- c("NC_000001.11","NC_000002.12","NC_000003.12","NC_000004.12","NC_000005.10","NC_000006.12","NC_000007.14","NC_000008.11","NC_000009.12","NC_000010.11","NC_000011.10","NC_000012.12","NC_000013.11","NC_000014.9","NC_000015.10","NC_000016.10","NC_000017.11","NC_000018.10","NC_000019.10","NC_000020.11","NC_000021.9","NC_000022.11","NC_000023.11","NC_000024.10")
 
 ##### FUNCTIONS #####
 
@@ -53,11 +52,12 @@ build_intronexon <- function(gtf, gene_list,out_ie, out_si) {
     filter(type %in%  "exon") %>% 
     mutate(start=start-1) %>%
     filter((!!as.name(gtf_col)) %in% gene_list) %>%
-#    filter(gtf_col %in% gene_list) %>%
+    #    filter(gtf_col %in% gene_list) %>%
     group_by(!!as.name(gtf_col), type) %>%
     mutate(group_id = case_when(strand=="+" ~ row_number(),
                                 strand=='-' ~ rev(row_number())),
-           nb_exon=max(group_id))
+           nb_exon=max(group_id),
+           gene_name = str_replace(!!as.name(gtf_col), "_", "-")) # replacing underscores in gene id to avoid problems during execution
   
   print(gtf_df_exon)
   
@@ -70,27 +70,27 @@ build_intronexon <- function(gtf, gene_list,out_ie, out_si) {
     mutate(intron_start=end, type="intron")
   gtf_df_intron_plus$intron_end <- shift(gtf_df_intron_plus$start, 1)
   print(gtf_df_intron_plus)
-
+  
   gtf_df_intron_plus <- gtf_df_intron_plus %>%
     filter(group_id!=nb_exon)%>%
-    group_by(!!as.name(gtf_col)) %>%
-    arrange(!!as.name(gtf_col), group_id)
+    group_by(gene_name) %>%
+    arrange(gene_name, group_id)
   print(gtf_df_intron_plus)
   
   print("### building intron_minus list from gtf")
-
+  
   # strand -
   gtf_df_intron_minus <- gtf_df_exon %>%
     filter(strand=='-') %>%
-    arrange(!!as.name(gtf_col), start) %>%
+    arrange(gene_name, start) %>%
     mutate(intron_start=end, type="intron")
   gtf_df_intron_minus$intron_end <- shift(gtf_df_intron_minus$start, 1)
-
+  
   gtf_df_intron_minus <- gtf_df_intron_minus%>%
     filter(group_id!=nb_exon) %>%
     filter(group_id!=0)%>%
-    group_by(!!as.name(gtf_col)) %>%
-    arrange(!!as.name(gtf_col), desc(group_id), type)
+    group_by(gene_name) %>%
+    arrange(gene_name, desc(group_id), type)
   print(gtf_df_intron_minus)
   print("### merging introns + and -")
   
@@ -101,13 +101,13 @@ build_intronexon <- function(gtf, gene_list,out_ie, out_si) {
     dplyr::rename("end"="intron_end")
   print(gtf_df_intron)
   print("### merging introns and exons")
-
-
+  
+  
   # now bind introns and exons and sort file so it makes sense
   gtf_df_intronexon <- rbind(gtf_df_exon, gtf_df_intron) %>%
     mutate(type_id=paste0(type, group_id))  %>%
-    arrange(!!as.name(gtf_col), start) %>%
-    mutate(reg_name=paste(!!as.name(gtf_col), type_id, sep='_'),
+    arrange(gene_name, start) %>%
+    mutate(reg_name=paste(gene_name, type_id, sep='_'),
            point='.') %>%
     ungroup() %>%
     select(c(seqnames, start, end, reg_name, point, strand))
@@ -119,11 +119,11 @@ build_intronexon <- function(gtf, gene_list,out_ie, out_si) {
   print("...")
   write_tsv(gtf_df_intron%>%
               ungroup() %>%
-              mutate(intron_id=paste0(!!as.name(gtf_col), '_', type, group_id)) %>%
+              mutate(intron_id=paste0(gene_name, '_', type, group_id)) %>%
               select(intron_id),
             file=out_si, col_names = FALSE)
   print("###DONE.")
-
+  
 }
 
 

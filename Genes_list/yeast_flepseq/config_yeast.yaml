@@ -1,0 +1,21 @@
+### EXPERIMENT SPECIFIC 
+basecalled_dir: "/ssd_workspace/jpeter/Guppy_basecalling/yeast_human/workspace/" # Path to fast5 files
+outdir: "/shared/home/jpeter/Data/FLEPseq2/RUN_yeast/"
+barcode_corr: "/shared/home/jpeter/Data/FLEPseq2/RUN_yeast/barcode_correspondance.tsv"
+sequencing_summary: "/ssd_workspace/jpeter/Guppy_basecalling/yeast_human/sequencing_summary.txt"
+
+### OUTPUT FILES ORGANIZATION
+runs_dir: "1_Runs"
+mapping_dir: "2_Mapping"
+polyA_dir: "3_PolyA"
+tail_dir: "4_Tail"
+
+### ANNOTATIONS
+introns_exons: "/shared/home/jpeter/Scripts/FLEPseq2/Genes_list/yeast_flepseq/intron_exon_yeast.bed"
+select_introns: "/shared/home/jpeter/Scripts/FLEPseq2/Genes_list/yeast_flepseq/select_intron_yeast.bed"
+reference_genome: "/shared/home/jpeter/Data/ReferenceGenomes/S_cerevisiae/S288C_reference_genome_R64-1-1_20110203/S288C_reference_sequence_R64-1-1_20110203_chr.fsa" # Reference genome in fasta
+
+### MINIMAP MAPPING ADDITIONAL PARAMETERS
+minimap2_add_opts: "--secondary=no -G 5000"
+
+

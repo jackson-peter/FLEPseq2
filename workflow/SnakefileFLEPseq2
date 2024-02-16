@@ -149,7 +149,7 @@ rule extract_tails:
         mem = "16G"
     shell:
         """
-        extract_tails.py --inadapter {input.merged_read_info} --inseq {input.fastq} --out {output.result}
+        extract_tails.py --inadapter {input.merged_read_info} --inseq {input.fastq} --out {output.result} --max_tail 500
         """
 
 rule prepare_data_for_splice_kinetics:
