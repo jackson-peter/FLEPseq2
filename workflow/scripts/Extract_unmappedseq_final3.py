@@ -1,5 +1,4 @@
 #!/usr/bin/env python
-# - Helene Zuber <helene.zuber@ibmp-cnrs.unistra.fr>
 
 #################################################################################
 # GOAL: Extract the portion of sequence that doesn't map the reference sequences
